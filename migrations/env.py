@@ -5,7 +5,7 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import pool
 
 from app.config import settings
@@ -13,8 +13,10 @@ from app.models import Base
 
 config = context.config
 
-# Inject the runtime database URL from our settings.
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# NOTE: the database URL is taken directly from settings (a SQLAlchemy URL
+# object) rather than written into the configparser-backed alembic config.
+# This avoids configparser '%' interpolation errors when the password
+# contains special characters.
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -47,9 +49,8 @@ def do_run_migrations(connection) -> None:
 
 async def run_migrations_online() -> None:
     """Run migrations using the async engine."""
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    connectable = create_async_engine(
+        settings.database_url,
         poolclass=pool.NullPool,
     )
     async with connectable.connect() as connection:

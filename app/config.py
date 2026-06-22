@@ -8,6 +8,7 @@ from functools import lru_cache
 
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import URL
 
 
 class Settings(BaseSettings):
@@ -38,13 +39,21 @@ class Settings(BaseSettings):
     # --- App ---
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
-    @computed_field  # type: ignore[prop-decorator]
     @property
-    def database_url(self) -> str:
-        """Async SQLAlchemy connection URL (asyncpg driver)."""
-        return (
-            f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
-            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+    def database_url(self) -> URL:
+        """Async SQLAlchemy connection URL (asyncpg driver).
+
+        Built via ``URL.create`` so passwords with special characters
+        (``%``, ``)``, ``@`` …) are stored safely without manual escaping
+        or configparser interpolation issues.
+        """
+        return URL.create(
+            drivername="postgresql+asyncpg",
+            username=self.postgres_user,
+            password=self.postgres_password,
+            host=self.postgres_host,
+            port=self.postgres_port,
+            database=self.postgres_db,
         )
 
     @computed_field  # type: ignore[prop-decorator]
