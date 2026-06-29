@@ -10,14 +10,12 @@ from sqlalchemy.ext.asyncio import (
 
 from app.config import settings
 
-# A single engine for the whole application lifetime.
 engine: AsyncEngine = create_async_engine(
     settings.database_url,
     echo=False,
-    pool_pre_ping=True,  # transparently recover dropped connections
+    pool_pre_ping=True,
 )
 
-# Session factory — call it to get a fresh AsyncSession.
 session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=engine,
     expire_on_commit=False,

@@ -9,6 +9,7 @@ import logging
 
 from app.bot import create_bot, create_dispatcher
 from app.config import settings
+from app.controllers.start import start_background_tasks
 
 
 def setup_logging() -> None:
@@ -27,8 +28,8 @@ async def main() -> None:
 
     logger.info("Starting AutoGarant bot…")
     try:
-        # Drop pending updates accumulated while the bot was offline.
         await bot.delete_webhook(drop_pending_updates=True)
+        start_background_tasks(bot)
         await dp.start_polling(bot)
     finally:
         await bot.session.close()

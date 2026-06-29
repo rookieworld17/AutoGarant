@@ -16,23 +16,20 @@ from app.middlewares import DatabaseMiddleware
 def create_bot() -> Bot:
     return Bot(
         token=settings.bot_token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN_V2),
     )
 
 
 def create_dispatcher() -> Dispatcher:
-    # Redis-backed FSM storage so state survives restarts (production-grade).
     redis = Redis.from_url(settings.redis_url)
     storage = RedisStorage(redis=redis)
 
     dp = Dispatcher(storage=storage)
 
-    # Inject a DB session into every handler.
     db_middleware = DatabaseMiddleware(session_factory)
     dp.message.middleware(db_middleware)
     dp.callback_query.middleware(db_middleware)
 
-    # Register all controllers.
     dp.include_routers(*routers)
 
     return dp

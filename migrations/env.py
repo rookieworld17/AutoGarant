@@ -13,10 +13,6 @@ from app.models import Base
 
 config = context.config
 
-# NOTE: the database URL is taken directly from settings (a SQLAlchemy URL
-# object) rather than written into the configparser-backed alembic config.
-# This avoids configparser '%' interpolation errors when the password
-# contains special characters.
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

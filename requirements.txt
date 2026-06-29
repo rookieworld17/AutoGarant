@@ -1,17 +1,8 @@
-# --- Telegram bot framework (modern async, aiogram 3.x) ---
 aiogram==3.17.0
-
-# --- Database: SQLAlchemy 2.0 (async) + PostgreSQL driver + migrations ---
 SQLAlchemy[asyncio]==2.0.36
 asyncpg==0.30.0
 alembic==1.14.0
-
-# --- Configuration management ---
 pydantic==2.10.4
 pydantic-settings==2.7.1
-
-# --- FSM / cache storage for production (optional but recommended) ---
 redis==5.2.1
-
-# --- Structured logging ---
 structlog==24.4.0

@@ -18,5 +18,5 @@ class Setting(IntPrimaryKeyMixin, TimestampMixin, Base):
     value: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         return f"<Setting {self.key}={self.value!r}>"

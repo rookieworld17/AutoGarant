@@ -2,10 +2,10 @@
 
 Import ``routers`` and include them into the dispatcher in order.
 """
-from app.controllers import common, start
+from app.controllers import admin, common, start
 
-# Order matters: specific routers first, the catch-all (common) last.
 routers = (
+    admin.router,
     start.router,
     common.router,
 )

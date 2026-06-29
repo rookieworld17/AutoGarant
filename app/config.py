@@ -4,6 +4,7 @@ Uses pydantic-settings so every value is validated and typed.
 """
 from __future__ import annotations
 
+from decimal import Decimal
 from functools import lru_cache
 
 from pydantic import Field, computed_field
@@ -20,23 +21,30 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # --- Telegram ---
     bot_token: str = Field(alias="BOT_TOKEN")
     admin_ids: str = Field(default="", alias="ADMIN_IDS")
 
-    # --- PostgreSQL ---
     postgres_host: str = Field(alias="POSTGRES_HOST")
     postgres_port: int = Field(default=5432, alias="POSTGRES_PORT")
     postgres_user: str = Field(alias="POSTGRES_USER")
     postgres_password: str = Field(alias="POSTGRES_PASSWORD")
     postgres_db: str = Field(alias="POSTGRES_DB")
 
-    # --- Redis ---
     redis_host: str = Field(alias="REDIS_HOST")
     redis_port: int = Field(default=6379, alias="REDIS_PORT")
     redis_db: int = Field(default=0, alias="REDIS_DB")
 
-    # --- App ---
+    deposit_commission_percent: Decimal = Field(
+        default=Decimal("0"), alias="DEPOSIT_COMMISSION_PERCENT"
+    )
+    withdraw_commission_percent: Decimal = Field(
+        default=Decimal("0"), alias="WITHDRAW_COMMISSION_PERCENT"
+    )
+    commission_tg_id: str = Field(default="", alias="COMMISSION_TG_ID")
+
+    crypto_pay_token: str = Field(default="", alias="CRYPTO_PAY_TOKEN")
+    crypto_pay_testnet: bool = Field(default=True, alias="CRYPTO_PAY_TESTNET")
+
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
     @property
@@ -56,7 +64,7 @@ class Settings(BaseSettings):
             database=self.postgres_db,
         )
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def redis_url(self) -> str:
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
@@ -66,11 +74,23 @@ class Settings(BaseSettings):
         """Parse the comma-separated ADMIN_IDS string into a list of ints."""
         return [int(x) for x in self.admin_ids.split(",") if x.strip()]
 
+    @property
+    def commission_recipient_id(self) -> int | None:
+        """Telegram id that should receive auto-forwarded commissions.
+
+        Uses COMMISSION_TG_ID when set, otherwise the first ADMIN_IDS entry;
+        ``None`` when neither is configured (commissions are then not forwarded).
+        """
+        if self.commission_tg_id.strip():
+            return int(self.commission_tg_id.strip())
+        admins = self.admin_id_list
+        return admins[0] if admins else None
+
 
 @lru_cache
 def get_settings() -> Settings:
     """Cached settings accessor — read the environment only once."""
-    return Settings()  # type: ignore[call-arg]
+    return Settings()
 
 
 settings = get_settings()

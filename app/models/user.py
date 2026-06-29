@@ -1,26 +1,36 @@
 """User model — one row per Telegram user that interacts with the bot."""
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Boolean, String
+from datetime import datetime
+from decimal import Decimal
+
+from sqlalchemy import BigInteger, DateTime, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IntPrimaryKeyMixin, TimestampMixin
+from app.models.base import Base
 
-
-class User(IntPrimaryKeyMixin, TimestampMixin, Base):
+class User(Base):
     __tablename__ = "users"
 
-    # Telegram identity
-    telegram_id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+
+    tg_id: Mapped[int] = mapped_column(
         BigInteger, unique=True, index=True, nullable=False
     )
+    app_id: Mapped[str] = mapped_column(
+        String(7), unique=True, index=True, nullable=False
+    )
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    language_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    # State flags
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    phone_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    deposit: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), default=Decimal("0"), server_default="0", nullable=False
+    )
 
-    def __repr__(self) -> str:  # pragma: no cover - debugging helper
-        return f"<User id={self.id} tg={self.telegram_id} @{self.username}>"
+    registered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return f"<User id={self.id} app={self.app_id} tg={self.tg_id} @{self.username}>"
